@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Nuestra Noche — La carta animada</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0d0a0b; --ink:#F3E9DC; --dim:rgba(243,233,220,.6); --faint:rgba(243,233,220,.35);
+    --gold:#C9A227; --wine:#6B1F2A; --accent:#C9A227;
+    --paper:#f3e9dc; --paper-ink:#3c0f16;
+    --glow:rgba(201,162,39,.28);
+  }
+  [data-theme="spicy"]{
+    --bg:#0a0506; --accent:#e0554b; --wine:#7d1622;
+    --paper:#2a0b10; --paper-ink:#f6e7dd; --glow:rgba(224,85,75,.3);
+  }
+  [data-theme="invite"]{
+    --bg:#0b0a09; --accent:#d8b45a; --wine:#5a3a1e;
+    --paper:#f6efe2; --paper-ink:#3a2a14; --glow:rgba(216,180,90,.28);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:radial-gradient(900px 600px at 50% 30%, #241014 0%, transparent 65%), var(--bg);
+    color:var(--ink); font-family:'Inter',system-ui,sans-serif;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    min-height:100vh;overflow:hidden;transition:background .6s;
+  }
+  .top{position:fixed;top:0;left:0;right:0;padding:22px;display:flex;justify-content:center;z-index:20}
+  .switcher{display:flex;gap:8px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);
+    padding:6px;border-radius:999px;backdrop-filter:blur(8px)}
+  .switcher button{
+    border:0;background:transparent;color:var(--faint);font-family:inherit;font-size:11px;
+    letter-spacing:.08em;padding:8px 14px;border-radius:999px;cursor:pointer;transition:.25s
+  }
+  .switcher button:hover{color:var(--ink)}
+  .switcher button.on{background:var(--accent);color:#1a1005;font-weight:700}
+
+  .stage{position:relative;width:min(92vw,460px);height:520px;display:flex;align-items:center;justify-content:center}
+
+  .halo{position:absolute;width:420px;height:420px;border-radius:50%;
+    background:radial-gradient(circle, var(--glow) 0%, transparent 68%);
+    filter:blur(6px);opacity:0;transition:opacity 1s}
+  .open .halo{opacity:1}
+
+  /* partículas */
+  .particles{position:absolute;inset:-60px;pointer-events:none;overflow:visible}
+  .p{position:absolute;bottom:30%;font-size:14px;opacity:0;color:var(--accent);
+    animation:rise 3.6s cubic-bezier(.2,.6,.3,1) forwards}
+  @keyframes rise{
+    0%{opacity:0;transform:translateY(0) scale(.6) rotate(0)}
+    12%{opacity:1}
+    100%{opacity:0;transform:translateY(-320px) scale(1.15) rotate(24deg)}
+  }
+
+  /* sobre */
+  .envelope{position:relative;width:340px;height:224px;cursor:pointer;transition:transform .5s}
+  .envelope:hover{transform:translateY(-4px)}
+  .env-back{position:absolute;inset:0;border-radius:10px;
+    background:linear-gradient(160deg,#7a2430,#4a141c);border:1px solid rgba(201,162,39,.5);
+    box-shadow:0 40px 90px rgba(0,0,0,.7)}
+  .env-front{position:absolute;inset:0;border-radius:10px;z-index:4;
+    background:linear-gradient(180deg,#6b1f2a,#521722);
+    clip-path:polygon(0 0,50% 44%,100% 0,100% 100%,0 100%);
+    box-shadow:inset 0 0 60px rgba(0,0,0,.35)}
+  .env-front::before,.env-front::after{content:"";position:absolute;top:0;bottom:0;width:52%;
+    background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(0,0,0,.18));z-index:-1}
+  .env-front::before{left:0;clip-path:polygon(0 0,100% 50%,0 100%)}
+  .env-front::after{right:0;clip-path:polygon(100% 0,0 50%,100% 100%)}
+  .env-flap{position:absolute;top:0;left:0;right:0;height:46%;z-index:6;
+    background:linear-gradient(180deg,#842a36,#5c1a24);
+    clip-path:polygon(0 0,100% 0,50% 100%);
+    transform-origin:top center;transition:transform .7s cubic-bezier(.5,0,.2,1),z-index 0s .35s;
+    border-top-left-radius:10px;border-top-right-radius:10px}
+  .open .env-flap{transform:rotateX(180deg);z-index:1}
+
+  .seal{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);z-index:7;
+    width:52px;height:52px;border-radius:50%;
+    background:radial-gradient(circle at 34% 30%,#a83343,#5a1420);
+    border:1px solid rgba(201,162,39,.55);display:flex;align-items:center;justify-content:center;
+    font-family:'Cormorant Garamond',Georgia,serif;font-size:15px;letter-spacing:.08em;color:var(--gold);
+    box-shadow:0 8px 18px rgba(0,0,0,.5), inset 0 1px 2px rgba(255,255,255,.2);
+    transition:opacity .4s,transform .5s}
+  .open .seal{opacity:0;transform:translate(-50%,-50%) scale(.6)}
+
+  /* carta */
+  .letter{position:absolute;left:20px;right:20px;top:16px;height:192px;z-index:3;
+    border-radius:4px;background:var(--paper);color:var(--paper-ink);
+    box-shadow:0 18px 40px rgba(0,0,0,.45);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
+    padding:20px 26px;opacity:0;transform:translateY(0) scale(.96);
+    transition:transform .9s cubic-bezier(.2,.8,.2,1) .45s, opacity .5s .45s, height .9s .45s}
+  .letter::before{content:"";position:absolute;inset:7px;border:1px solid rgba(201,162,39,.45);border-radius:2px;pointer-events:none}
+  .open .letter{transform:translateY(-176px) scale(1);opacity:1;z-index:8}
+
+  .letter .brand{font-size:7px;letter-spacing:.42em;color:rgba(107,31,42,.7);margin-bottom:10px}
+  [data-theme="spicy"] .letter .brand{color:rgba(201,162,39,.85)}
+  .letter .to{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:rgba(60,15,22,.55);margin-bottom:8px}
+  [data-theme="spicy"] .letter .to{color:rgba(246,231,221,.5)}
+  .letter .quote{font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;font-size:21px;line-height:1.35}
+  .letter .meta{font-size:9px;letter-spacing:.12em;text-transform:uppercase;margin-top:12px;opacity:.7}
+  .letter .sign{font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;font-size:13px;margin-top:10px;opacity:.8}
+
+  /* cupido */
+  .cupid{position:absolute;width:150px;z-index:9;opacity:0;color:var(--gold);pointer-events:none;
+    left:-160px;top:20px}
+  .open[data-theme="romantic"] .cupid{animation:fly 4.2s cubic-bezier(.3,.1,.3,1) .9s forwards}
+  @keyframes fly{
+    0%{opacity:0;transform:translate(0,40px) rotate(-8deg) scale(.9)}
+    12%{opacity:1}
+    55%{transform:translate(240px,-30px) rotate(4deg) scale(1)}
+    100%{opacity:0;transform:translate(480px,20px) rotate(10deg) scale(.95)}
+  }
+
+  /* diablito */
+  .devil{position:absolute;width:132px;z-index:9;opacity:0;color:#e0554b;pointer-events:none;
+    left:50%;bottom:26px;transform:translateX(-50%)}
+  .open[data-theme="spicy"] .devil{animation:peek 3.2s ease-out .8s forwards}
+  @keyframes peek{
+    0%{opacity:0;transform:translateX(-50%) translateY(60px) scale(.7) rotate(-6deg)}
+    25%{opacity:1;transform:translateX(-50%) translateY(-6px) scale(1) rotate(3deg)}
+    40%{transform:translateX(-50%) translateY(0) rotate(-2deg)}
+    55%{transform:translateX(-50%) translateY(-4px) rotate(2deg)}
+    85%{opacity:1;transform:translateX(-50%) translateY(0)}
+    100%{opacity:0;transform:translateX(-50%) translateY(40px)}
+  }
+
+  /* brillos invitación */
+  .spark{position:absolute;width:6px;height:6px;border-radius:50%;background:var(--accent);
+    box-shadow:0 0 12px 3px var(--accent);opacity:0}
+  .open[data-theme="invite"] .spark{animation:twinkle 2.8s ease-in-out .8s infinite}
+  @keyframes twinkle{0%,100%{opacity:0;transform:scale(.4)}50%{opacity:.9;transform:scale(1)}}
+
+  /* controles */
+  .controls{position:fixed;bottom:34px;left:0;right:0;display:flex;justify-content:center;gap:12px;z-index:20}
+  .btn{border:1px solid rgba(201,162,39,.45);background:transparent;color:var(--ink);
+    font-family:inherit;font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+    padding:14px 30px;border-radius:999px;cursor:pointer;transition:.3s}
+  .btn:hover{background:var(--accent);color:#1a1005;border-color:var(--accent)}
+  .btn.primary{background:linear-gradient(180deg,#d4ad34,#b8911f);color:#221506;border-color:transparent;font-weight:700}
+
+  .badge18{position:fixed;top:26px;right:26px;border:1px solid rgba(224,85,75,.5);color:#e0554b;
+    font-size:9px;letter-spacing:.2em;padding:6px 10px;border-radius:999px;opacity:0;transition:.4s;z-index:20}
+  body[data-theme="spicy"] .badge18{opacity:1}
+
+  .caption{position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:9px;
+    letter-spacing:.2em;text-transform:uppercase;color:var(--faint)}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:.01ms !important;transition-duration:.01ms !important}
+  }
+</style>
+</head>
+<body data-theme="romantic">
+
+  <div class="top">
+    <div class="switcher">
+      <button data-t="romantic" class="on">Romance</button>
+      <button data-t="spicy">+18 Picante</button>
+      <button data-t="invite">Invitación</button>
+    </div>
+  </div>
+
+  <div class="badge18">SOLO +18</div>
+
+  <div class="stage" id="stage">
+    <div class="halo"></div>
+    <div class="particles" id="particles"></div>
+
+    <div class="envelope" id="envelope">
+      <div class="env-back"></div>
+
+      <div class="letter" id="letter">
+        <div class="brand">NUESTRA NOCHE</div>
+        <div class="to" id="to">Para ti</div>
+        <div class="quote" id="quote">Esta noche no hay plan.<br>Hay instrucciones.</div>
+        <div class="meta" id="meta">22:00 · Donde tú elijas</div>
+        <div class="sign" id="sign">Siempre tuya</div>
+      </div>
+
+      <div class="env-front"></div>
+      <div class="env-flap"></div>
+      <div class="seal">NN</div>
+    </div>
+
+    <svg class="cupid" viewBox="0 0 200 140" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+      <path d="M70 52C52 26 24 30 32 56c7 22 28 14 38 4"/>
+      <path d="M130 52c18-26 46-22 38 4-7 22-28 14-38 4"/>
+      <circle cx="100" cy="48" r="12"/>
+      <path d="M100 60v30M100 68l-15 11M100 68l15 11M100 90l-11 22M100 90l11 22"/>
+      <path d="M120 60q20 12 0 26"/>
+      <path d="M120 73H92"/>
+      <path d="M92 73l-7-4M92 73l-7 4"/>
+    </svg>
+
+    <svg class="devil" viewBox="0 0 160 170" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+      <path d="M58 46C48 18 28 24 38 44"/>
+      <path d="M102 46c10-28 30-22 20-2"/>
+      <circle cx="80" cy="70" r="27"/>
+      <circle cx="70" cy="66" r="2" fill="currentColor"/>
+      <circle cx="90" cy="66" r="2" fill="currentColor"/>
+      <path d="M70 82q10 8 20 0"/>
+      <path d="M80 97v22"/>
+      <path d="M80 119c22 2 32-8 22-20"/>
+      <path d="M80 119l-15 16M80 119l15 16"/>
+    </svg>
+  </div>
+
+  <div class="controls">
+    <button class="btn primary" id="openBtn">Abrir carta</button>
+    <button class="btn" id="againBtn">Ver otra vez</button>
+  </div>
+
+  <div class="caption">Maqueta de animación · Nuestra Noche</div>
+
+<script>
+  const body = document.body;
+  const stage = document.getElementById('stage');
+  const particles = document.getElementById('particles');
+  const openBtn = document.getElementById('openBtn');
+  const againBtn = document.getElementById('againBtn');
+
+  const CONTENT = {
+    romantic: {
+      to: 'Para ti',
+      quote: 'Hay fechas que no se olvidan.<br>Tú eres todas.',
+      meta: 'Nuestro aniversario · 22:00',
+      sign: 'Siempre tuya',
+      particle: '♥'
+    },
+    spicy: {
+      to: 'Para ti, solo para ti',
+      quote: 'Esta noche no hay plan.<br>Hay instrucciones.',
+      meta: '22:00 · Donde tú elijas',
+      sign: 'No llegues puntual',
+      particle: '•'
+    },
+    invite: {
+      to: 'Reserva para dos',
+      quote: 'Esta noche te espero.<br>No traigas nada puesto.',
+      meta: 'Motel Aurora · Habitación 7 · 23:30',
+      sign: 'Tú y yo',
+      particle: '✦'
+    }
+  };
+
+  let current = 'romantic';
+  let opened = false;
+
+  function setTheme(t){
+    current = t;
+    body.dataset.theme = t;
+    stage.dataset.theme = t;
+    document.querySelectorAll('.switcher button').forEach(b =>
+      b.classList.toggle('on', b.dataset.t === t));
+    const c = CONTENT[t];
+    document.getElementById('to').textContent = c.to;
+    document.getElementById('quote').innerHTML = c.quote;
+    document.getElementById('meta').textContent = c.meta;
+    document.getElementById('sign').textContent = c.sign;
+    reset();
+  }
+
+  function reset(){
+    opened = false;
+    stage.classList.remove('open');
+    body.classList.remove('open');
+    openBtn.textContent = 'Abrir carta';
+    particles.innerHTML = '';
+  }
+
+  function burst(){
+    const glyph = CONTENT[current].particle;
+    const n = current === 'romantic' ? 22 : current === 'spicy' ? 26 : 18;
+    for (let i = 0; i < n; i++){
+      const s = document.createElement('span');
+      s.className = 'p';
+      s.textContent = glyph;
+      s.style.left = (10 + Math.random() * 80) + '%';
+      s.style.fontSize = (9 + Math.random() * 12) + 'px';
+      s.style.animationDelay = (Math.random() * 1.6) + 's';
+      s.style.animationDuration = (2.8 + Math.random() * 2.2) + 's';
+      if (current === 'spicy'){
+        s.style.color = Math.random() > .5 ? '#e0554b' : '#ffb27a';
+      }
+      particles.appendChild(s);
+    }
+  }
+
+  function open(){
+    if (opened) return;
+    opened = true;
+    stage.classList.add('open');
+    body.classList.add('open');
+    openBtn.textContent = 'Carta abierta';
+    setTimeout(burst, 500);
+  }
+
+  openBtn.addEventListener('click', open);
+  againBtn.addEventListener('click', () => { reset(); setTimeout(open, 260); });
+  document.querySelectorAll('.switcher button').forEach(b =>
+    b.addEventListener('click', () => setTheme(b.dataset.t)));
+
+  // Carta compartida: todos los datos van en el enlace, sin servidor.
+  function esc(text) {
+    return String(text).replace(/[&<>"']/g, c => ({
+      '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+    })[c]);
+  }
+
+  function sharedData() {
+    try {
+      const params = new URLSearchParams(location.hash.replace(/^#/, ''));
+      const raw = params.get('c');
+      return raw ? JSON.parse(decodeURIComponent(raw)) : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  const shared = sharedData();
+  if (shared && shared.quote) {
+    const theme = shared.tone === 'spicy' ? 'spicy'
+      : shared.tone === 'invite' ? 'invite' : 'romantic';
+    setTheme(theme);
+    if (shared.to) document.getElementById('to').textContent = shared.to;
+    document.getElementById('quote').innerHTML = esc(shared.quote).replace(/\n/g, '<br>');
+    if (shared.meta) document.getElementById('meta').textContent = shared.meta;
+    if (shared.sign) document.getElementById('sign').textContent = shared.sign;
+
+    document.querySelector('.top').style.display = 'none';
+    document.querySelector('.caption').textContent = 'Hecho con Nuestra Noche';
+    document.getElementById('openBtn').textContent = 'Abrir mi carta';
+    setTimeout(open, 900);
+  } else {
+    const q = new URLSearchParams(location.search);
+    if (q.get('theme')) setTheme(q.get('theme'));
+    if (q.get('open') === '1') setTimeout(open, 400);
+  }
+</script>
+</body>
+</html>
